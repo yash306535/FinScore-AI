@@ -1,0 +1,48 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile_inline: |
+        FROM node:20-alpine
+        WORKDIR /app
+        COPY package.json ./
+        COPY tsconfig.json ./
+        COPY src ./src
+        RUN npm install
+        RUN npx prisma generate --schema src/prisma/schema.prisma
+        CMD ["npm", "run", "dev"]
+    env_file:
+      - ./backend/.env
+    environment:
+      FRONTEND_URL: http://localhost:5173
+    command: npm run dev
+    ports:
+      - '3001:3001'
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile_inline: |
+        FROM node:20-alpine
+        WORKDIR /app
+        COPY package.json ./
+        COPY tsconfig.json ./
+        COPY tailwind.config.ts ./
+        COPY vite.config.ts ./
+        COPY index.html ./
+        COPY src ./src
+        RUN npm install
+        CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

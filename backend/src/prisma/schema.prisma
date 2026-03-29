@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String        @id @default(cuid())
+  email     String        @unique
+  name      String
+  password  String
+  age       Int?
+  income    Float?
+  createdAt DateTime      @default(now())
+  scores    ScoreResult[]
+}
+
+model ScoreResult {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalScore    Float
+  emergency     Float
+  insurance     Float
+  investments   Float
+  debt          Float
+  tax           Float
+  retirement    Float
+  quizAnswers   Json
+  aiInsights    String   @db.Text
+  actionPlan    Json
+  geminiInsight String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
