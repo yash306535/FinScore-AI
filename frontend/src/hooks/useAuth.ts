@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,12 +23,11 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const setUser = useQuizStore((state) => state.setUser);
   const clearUser = useQuizStore((state) => state.clearUser);
-  const setLoading = useQuizStore((state) => state.setLoading);
-  const isLoading = useQuizStore((state) => state.isLoading);
+  const [isLoading, setIsLoading] = useState(false);
 
   const register = async (payload: RegisterPayload): Promise<User> => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data } = await api.post<{ user: User }>('/auth/register', payload, {
         headers: {
           'X-Skip-Auth-Redirect': 'true'
@@ -38,13 +38,13 @@ export const useAuth = () => {
     } catch (error) {
       throw error as AxiosError;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const login = async (payload: LoginPayload): Promise<User> => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data } = await api.post<{ user: User }>('/auth/login', payload, {
         headers: {
           'X-Skip-Auth-Redirect': 'true'
@@ -55,7 +55,7 @@ export const useAuth = () => {
     } catch (error) {
       throw error as AxiosError;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
