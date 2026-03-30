@@ -24,6 +24,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
+import { isAllowedFrontendOrigin } from './config/runtime';
 import { errorMiddleware } from './middleware/error.middleware';
 import { generalRateLimit } from './middleware/rateLimit.middleware';
 import authRoutes from './routes/auth.routes';
@@ -36,9 +37,12 @@ const app = express();
 const port = Number(process.env.PORT) || 3001;
 const host = process.env.HOST || '0.0.0.0';
 
+app.set('trust proxy', 1);
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      callback(null, isAllowedFrontendOrigin(origin));
+    },
     credentials: true
   })
 );

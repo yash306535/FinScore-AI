@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 
+import { getAuthCookieClearOptions, getAuthCookieOptions } from '../config/runtime';
 import { createAppError } from '../types';
 
 const prisma = new PrismaClient();
@@ -15,13 +16,6 @@ const userSelect = {
   income: true,
   createdAt: true
 } satisfies Prisma.UserSelect;
-
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000
-});
 
 const signToken = (userId: string, email: string): string =>
   jwt.sign({ userId, email }, process.env.JWT_SECRET || '', {
@@ -53,7 +47,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const token = signToken(user.id, user.email);
 
-    res.cookie('token', token, getCookieOptions());
+    res.cookie('token', token, getAuthCookieOptions());
     res.status(201).json({ user });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -87,7 +81,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
     const token = signToken(user.id, user.email);
 
-    res.cookie('token', token, getCookieOptions());
+    res.cookie('token', token, getAuthCookieOptions());
     res.json({
       user: {
         id: user.id,
@@ -104,11 +98,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 };
 
 export const logout = (_req: Request, res: Response): void => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  });
+  res.clearCookie('token', getAuthCookieClearOptions());
   res.json({ message: 'logged out successfully' });
 };
 
