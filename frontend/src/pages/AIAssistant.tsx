@@ -252,7 +252,7 @@ export const AIAssistant = () => {
               <Sparkles className="h-4 w-4" />
               Gemini + Serper Copilot
             </div>
-            <h1 className="mt-4 font-display text-4xl font-bold text-white sm:text-5xl">
+            <h1 className="mt-4 font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
               Money guidance that feels personal, not robotic.
             </h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-muted sm:text-lg">
@@ -293,7 +293,7 @@ export const AIAssistant = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[330px,minmax(0,1fr)] xl:grid-cols-[370px,minmax(0,1fr)]">
-          <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <div className="order-2 space-y-6 lg:order-1 lg:sticky lg:top-24 lg:self-start">
             <Card className="overflow-hidden border-white/10 bg-[linear-gradient(145deg,rgba(245,158,11,0.16),rgba(15,23,42,0.92)_38%,rgba(15,23,42,0.98))] p-0">
               <div className="p-6">
                 <div className="flex items-center gap-3">
@@ -372,60 +372,68 @@ export const AIAssistant = () => {
               )}
             </Card>
 
-            <Card className="overflow-hidden border-emerald-400/15 bg-[linear-gradient(160deg,rgba(16,185,129,0.12),rgba(15,23,42,0.95)_45%,rgba(15,23,42,0.98))]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-300">
-                    <Newspaper className="h-3.5 w-3.5" />
-                    Serper Feature
-                  </div>
-                  <h2 className="mt-3 font-display text-3xl font-bold text-white">Opportunity Radar</h2>
-                  <p className="mt-2 text-sm leading-6 text-white/80">
-                    Scan live India-focused financial signals and turn them into practical, actionable
-                    moves.
-                  </p>
+            <Card className="overflow-hidden border-emerald-400/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),rgba(15,23,42,0.96)_50%,rgba(15,23,42,0.99))]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/25">
+                  <Newspaper className="h-5 w-5" />
                 </div>
-                <Button
-                  className="shrink-0 px-4 py-3"
-                  onClick={() => void generateRadar()}
-                  loading={radarLoading}
-                >
-                  {radar ? 'Refresh' : 'Generate'}
-                </Button>
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-300 ring-1 ring-emerald-400/20">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Live · Serper
+                </div>
               </div>
 
+              <h2 className="mt-4 font-display text-2xl font-bold text-white">Opportunity Radar</h2>
+              <p className="mt-1.5 text-sm leading-6 text-white/70">
+                Scan live India-focused financial signals and turn them into practical, actionable moves.
+              </p>
+
+              <Button
+                className="mt-4 w-full py-3"
+                onClick={() => void generateRadar()}
+                loading={radarLoading}
+              >
+                <TrendingUp className="h-4 w-4" />
+                {radar ? 'Refresh Radar' : 'Generate Radar'}
+              </Button>
+
               {radar ? (
-                <div className="mt-6 space-y-5">
-                  <div>
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] p-4">
                     <p className="text-xs uppercase tracking-[0.18em] text-emerald-300/80">
                       {radar.focusDimension ? `${radar.focusDimension} Focus` : 'General Focus'}
                     </p>
-                    <h3 className="mt-2 font-display text-2xl font-bold text-white">{radar.title}</h3>
+                    <h3 className="mt-2 font-display text-xl font-bold text-white">{radar.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-white/85">{radar.summary}</p>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted">Next Actions</p>
-                      <div className="mt-3 space-y-3 text-sm leading-6 text-white/90">
-                        {radar.actions.map((item) => (
-                          <p key={item}>- {item}</p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted">Watchouts</p>
-                      <div className="mt-3 space-y-3 text-sm leading-6 text-white/90">
-                        {radar.watchouts.map((item) => (
-                          <p key={item}>- {item}</p>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-emerald-300/70">Next Actions</p>
+                    <ul className="mt-3 space-y-2">
+                      {radar.actions.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-sm leading-6 text-white/90">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-xs leading-6 text-muted">
+                  <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-amber/70">Watchouts</p>
+                    <ul className="mt-3 space-y-2">
+                      {radar.watchouts.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-sm leading-6 text-white/90">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3 text-xs leading-5 text-muted">
                     <p>Query: {radar.searchQuery}</p>
-                    <p>Updated: {new Date(radar.generatedAt).toLocaleString('en-IN')}</p>
+                    <p className="mt-1">Updated: {new Date(radar.generatedAt).toLocaleString('en-IN')}</p>
                   </div>
 
                   {radar.warning ? (
@@ -437,15 +445,21 @@ export const AIAssistant = () => {
                   <SourceList sources={radar.sources} />
                 </div>
               ) : (
-                <div className="mt-6 rounded-2xl border border-dashed border-white/15 bg-black/10 p-5 text-sm leading-6 text-white/75">
-                  Generate a brief to surface timely opportunities, market cues, and action ideas from live
-                  search results.
+                <div className="mt-4 rounded-2xl border border-dashed border-emerald-400/20 bg-emerald-400/[0.03] p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-400">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <p className="text-sm leading-6 text-white/55">
+                      Surface timely opportunities, market cues, and actionable ideas from live web search — personalised to your weakest financial area.
+                    </p>
+                  </div>
                 </div>
               )}
             </Card>
           </div>
 
-          <Card className="relative flex min-h-[720px] flex-col overflow-hidden border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.95),rgba(15,23,42,0.82)_45%,rgba(2,132,199,0.08))] p-0 lg:min-h-[780px] lg:h-[calc(100vh-10rem)]">
+          <Card className="relative order-1 flex h-[calc(100svh-9rem)] min-h-[480px] flex-col overflow-hidden border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.95),rgba(15,23,42,0.82)_45%,rgba(2,132,199,0.08))] p-0 lg:order-2 lg:h-[calc(100vh-10rem)] lg:min-h-[780px]">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-amber/10 to-transparent" />
 
             <div className="relative border-b border-white/10 px-5 py-5 sm:px-6">
