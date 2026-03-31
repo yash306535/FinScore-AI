@@ -60,9 +60,75 @@ const buildWelcomeMessage = (score: ScoreResult | null): ChatMessage => ({
   mode: 'score'
 });
 
-const SourceList = ({ sources }: { sources: ChatSource[] }) => {
+const getDomain = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+};
+
+const getFaviconUrl = (url: string): string => {
+  const domain = new URL(url).origin;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+};
+
+const SourceList = ({ sources, large }: { sources: ChatSource[]; large?: boolean }) => {
   if (!sources.length) {
     return null;
+  }
+
+  if (large) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {sources.slice(0, 4).map((source) => (
+          <a
+            key={source.link}
+            href={source.link}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/8 to-white/[0.02] transition hover:border-emerald-400/40 hover:from-emerald-400/10 hover:to-white/5"
+          >
+            {/* favicon banner */}
+            <div className="flex h-20 items-center justify-center border-b border-white/8 bg-gradient-to-br from-white/5 to-transparent">
+              <img
+                src={getFaviconUrl(source.link)}
+                alt={getDomain(source.link)}
+                className="h-10 w-10 rounded-xl object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+            <div className="flex flex-1 flex-col p-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold leading-5 text-white transition group-hover:text-emerald-300">
+                  {source.title}
+                </p>
+                <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted transition group-hover:text-emerald-300" />
+              </div>
+              <p className="mt-2 flex-1 text-xs leading-5 text-white/55">
+                {source.snippet || 'Open source'}
+              </p>
+              <div className="mt-3 flex items-center gap-2 border-t border-white/8 pt-3">
+                <img
+                  src={getFaviconUrl(source.link)}
+                  alt=""
+                  className="h-4 w-4 rounded object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <p className="truncate text-[11px] uppercase tracking-[0.15em] text-emerald-300/70">
+                  {source.source || getDomain(source.link)}
+                  {source.date ? ` · ${source.date}` : ''}
+                </p>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -73,20 +139,30 @@ const SourceList = ({ sources }: { sources: ChatSource[] }) => {
           href={source.link}
           target="_blank"
           rel="noreferrer"
-          className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/0 p-3 transition hover:border-amber/40 hover:from-amber/10 hover:to-white/5"
+          className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/8 to-white/0 p-3 transition hover:border-amber/40 hover:from-amber/10 hover:to-white/5"
         >
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-semibold text-white transition group-hover:text-amber">
-              {source.title}
-            </p>
-            <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted transition group-hover:text-amber" />
+          <img
+            src={getFaviconUrl(source.link)}
+            alt={getDomain(source.link)}
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-lg object-contain"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-semibold text-white transition group-hover:text-amber">
+                {source.title}
+              </p>
+              <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted transition group-hover:text-amber" />
+            </div>
+            <p className="mt-1 text-xs leading-5 text-muted">{source.snippet || 'Open source'}</p>
+            {source.source || source.date ? (
+              <p className="mt-1.5 text-[11px] uppercase tracking-[0.15em] text-amber/70">
+                {[source.source || getDomain(source.link), source.date].filter(Boolean).join(' · ')}
+              </p>
+            ) : null}
           </div>
-          <p className="mt-2 text-xs leading-5 text-muted">{source.snippet || 'Open source'}</p>
-          {source.source || source.date ? (
-            <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-amber/80">
-              {[source.source, source.date].filter(Boolean).join(' / ')}
-            </p>
-          ) : null}
         </a>
       ))}
     </div>
@@ -639,7 +715,7 @@ export const AIAssistant = () => {
                 </div>
 
                 {/* Sources */}
-                <SourceList sources={radar.sources} />
+                <SourceList sources={radar.sources} large />
 
                 {radar.warning ? (
                   <div className="flex items-start gap-3 rounded-2xl border border-amber/25 bg-amber/10 px-5 py-4 text-sm text-amber">
