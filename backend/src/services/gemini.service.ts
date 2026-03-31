@@ -37,11 +37,20 @@ const actionPlanSchema = z
   )
   .length(12);
 
+const coerceToString = z.preprocess((val) => {
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object' && val !== null) {
+    const first = Object.values(val as Record<string, unknown>).find((v) => typeof v === 'string');
+    return first ?? JSON.stringify(val);
+  }
+  return String(val);
+}, z.string().min(1));
+
 const opportunityRadarSchema = z.object({
   title: z.string().min(1).max(120),
   summary: z.string().min(1),
-  actions: z.array(z.string().min(1)).length(3),
-  watchouts: z.array(z.string().min(1)).length(2)
+  actions: z.array(coerceToString).min(1).max(6),
+  watchouts: z.array(coerceToString).min(1).max(5)
 });
 
 const getGeminiClient = (): GoogleGenerativeAI => {
