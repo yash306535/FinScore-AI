@@ -293,7 +293,7 @@ export const AIAssistant = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[330px,minmax(0,1fr)] xl:grid-cols-[370px,minmax(0,1fr)]">
-          <div className="order-2 space-y-6 lg:order-1 lg:sticky lg:top-24 lg:self-start">
+          <div className="order-2 space-y-6 lg:order-1 lg:sticky lg:top-24 lg:max-h-[calc(100vh-10rem)] lg:self-start lg:overflow-y-auto">
             <Card className="overflow-hidden border-white/10 bg-[linear-gradient(145deg,rgba(245,158,11,0.16),rgba(15,23,42,0.92)_38%,rgba(15,23,42,0.98))] p-0">
               <div className="p-6">
                 <div className="flex items-center gap-3">
@@ -372,91 +372,6 @@ export const AIAssistant = () => {
               )}
             </Card>
 
-            <Card className="overflow-hidden border-emerald-400/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),rgba(15,23,42,0.96)_50%,rgba(15,23,42,0.99))]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/25">
-                  <Newspaper className="h-5 w-5" />
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-300 ring-1 ring-emerald-400/20">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                  Live · Serper
-                </div>
-              </div>
-
-              <h2 className="mt-4 font-display text-2xl font-bold text-white">Opportunity Radar</h2>
-              <p className="mt-1.5 text-sm leading-6 text-white/70">
-                Scan live India-focused financial signals and turn them into practical, actionable moves.
-              </p>
-
-              <Button
-                className="mt-4 w-full py-3"
-                onClick={() => void generateRadar()}
-                loading={radarLoading}
-              >
-                <TrendingUp className="h-4 w-4" />
-                {radar ? 'Refresh Radar' : 'Generate Radar'}
-              </Button>
-
-              {radar ? (
-                <div className="mt-6 space-y-4">
-                  <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-emerald-300/80">
-                      {radar.focusDimension ? `${radar.focusDimension} Focus` : 'General Focus'}
-                    </p>
-                    <h3 className="mt-2 font-display text-xl font-bold text-white">{radar.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-white/85">{radar.summary}</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-emerald-300/70">Next Actions</p>
-                    <ul className="mt-3 space-y-2">
-                      {radar.actions.map((item) => (
-                        <li key={item} className="flex items-start gap-2 text-sm leading-6 text-white/90">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-navy/50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-amber/70">Watchouts</p>
-                    <ul className="mt-3 space-y-2">
-                      {radar.watchouts.map((item) => (
-                        <li key={item} className="flex items-start gap-2 text-sm leading-6 text-white/90">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3 text-xs leading-5 text-muted">
-                    <p>Query: {radar.searchQuery}</p>
-                    <p className="mt-1">Updated: {new Date(radar.generatedAt).toLocaleString('en-IN')}</p>
-                  </div>
-
-                  {radar.warning ? (
-                    <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-sm text-amber">
-                      {radar.warning}
-                    </div>
-                  ) : null}
-
-                  <SourceList sources={radar.sources} />
-                </div>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-dashed border-emerald-400/20 bg-emerald-400/[0.03] p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-400">
-                      <TrendingUp className="h-4 w-4" />
-                    </div>
-                    <p className="text-sm leading-6 text-white/55">
-                      Surface timely opportunities, market cues, and actionable ideas from live web search — personalised to your weakest financial area.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </Card>
           </div>
 
           <Card className="relative order-1 flex h-[calc(100svh-9rem)] min-h-[480px] flex-col overflow-hidden border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.95),rgba(15,23,42,0.82)_45%,rgba(2,132,199,0.08))] p-0 lg:order-2 lg:h-[calc(100vh-10rem)] lg:min-h-[780px]">
@@ -630,6 +545,132 @@ export const AIAssistant = () => {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* ── Opportunity Radar – full width ── */}
+        <div className="mt-6 overflow-hidden rounded-3xl border border-emerald-400/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.13),rgba(15,23,42,0.97)_55%,rgba(15,23,42,1))]">
+          {/* Header */}
+          <div className="flex flex-col gap-5 border-b border-emerald-400/10 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div className="flex items-center gap-4">
+              <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/25">
+                <Newspaper className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-300 ring-1 ring-emerald-400/20">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Live · Serper Powered
+                </div>
+                <h2 className="mt-2 font-display text-3xl font-bold text-white sm:text-4xl">
+                  Opportunity Radar
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-white/60">
+                  Scan live India-focused financial signals and turn them into practical, actionable moves.
+                </p>
+              </div>
+            </div>
+            <Button
+              className="shrink-0 px-6 py-3 sm:self-start"
+              onClick={() => void generateRadar()}
+              loading={radarLoading}
+            >
+              <TrendingUp className="h-4 w-4" />
+              {radar ? 'Refresh Radar' : 'Generate Radar'}
+            </Button>
+          </div>
+
+          {/* Body */}
+          <div className="px-6 py-6 sm:px-8">
+            {radar ? (
+              <div className="space-y-6">
+                {/* Focus + summary */}
+                <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] px-6 py-5">
+                  <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">
+                    {radar.focusDimension ? `${radar.focusDimension} Focus` : 'General Focus'}
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
+                    {radar.title}
+                  </h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-white/80">{radar.summary}</p>
+                </div>
+
+                {/* Actions + Watchouts */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-emerald-400/15 bg-[rgba(16,185,129,0.05)] px-5 py-5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-300">
+                        <TrendingUp className="h-3.5 w-3.5" />
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                        Next Actions
+                      </p>
+                    </div>
+                    <ul className="mt-4 space-y-3">
+                      {radar.actions.map((item, index) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-[11px] font-bold text-emerald-300">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm leading-6 text-white/85">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-amber/15 bg-[rgba(245,158,11,0.05)] px-5 py-5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber/15 text-amber">
+                        <TriangleAlert className="h-3.5 w-3.5" />
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber/80">
+                        Watchouts
+                      </p>
+                    </div>
+                    <ul className="mt-4 space-y-3">
+                      {radar.watchouts.map((item, index) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber/20 text-[11px] font-bold text-amber">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm leading-6 text-white/85">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Sources */}
+                <SourceList sources={radar.sources} />
+
+                {radar.warning ? (
+                  <div className="flex items-start gap-3 rounded-2xl border border-amber/25 bg-amber/10 px-5 py-4 text-sm text-amber">
+                    <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{radar.warning}</span>
+                  </div>
+                ) : null}
+
+                <div className="rounded-2xl border border-white/8 bg-black/10 px-5 py-3 text-xs leading-6 text-muted">
+                  <span className="text-white/40">Query:</span> {radar.searchQuery}
+                  <span className="mx-3 text-white/20">·</span>
+                  <span className="text-white/40">Updated:</span>{' '}
+                  {new Date(radar.generatedAt).toLocaleString('en-IN')}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center py-12 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-400/10 text-emerald-400 ring-1 ring-emerald-400/20">
+                  <TrendingUp className="h-8 w-8" />
+                </div>
+                <h3 className="mt-5 font-display text-xl font-bold text-white">
+                  No radar generated yet
+                </h3>
+                <p className="mt-2 max-w-md text-sm leading-7 text-white/50">
+                  Hit <span className="text-emerald-300">Generate Radar</span> to surface timely
+                  opportunities, market cues, and actionable ideas from live web search — personalised
+                  to your weakest financial area.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </AppShell>
