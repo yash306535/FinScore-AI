@@ -28,11 +28,12 @@ export const useAuth = () => {
   const register = async (payload: RegisterPayload): Promise<User> => {
     try {
       setIsLoading(true);
-      const { data } = await api.post<{ user: User }>('/auth/register', payload, {
+      const { data } = await api.post<{ user: User; token: string }>('/auth/register', payload, {
         headers: {
           'X-Skip-Auth-Redirect': 'true'
         }
       });
+      localStorage.setItem('auth_token', data.token);
       setUser(data.user);
       return data.user;
     } catch (error) {
@@ -45,11 +46,12 @@ export const useAuth = () => {
   const login = async (payload: LoginPayload): Promise<User> => {
     try {
       setIsLoading(true);
-      const { data } = await api.post<{ user: User }>('/auth/login', payload, {
+      const { data } = await api.post<{ user: User; token: string }>('/auth/login', payload, {
         headers: {
           'X-Skip-Auth-Redirect': 'true'
         }
       });
+      localStorage.setItem('auth_token', data.token);
       setUser(data.user);
       return data.user;
     } catch (error) {
@@ -67,6 +69,7 @@ export const useAuth = () => {
         }
       });
     } finally {
+      localStorage.removeItem('auth_token');
       clearUser();
       navigate('/');
     }

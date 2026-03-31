@@ -48,7 +48,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const token = signToken(user.id, user.email);
 
     res.cookie('token', token, getAuthCookieOptions());
-    res.status(201).json({ user });
+    res.status(201).json({ user, token });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       next(createAppError('email already registered', 409));
@@ -83,6 +83,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
     res.cookie('token', token, getAuthCookieOptions());
     res.json({
+      token,
       user: {
         id: user.id,
         name: user.name,
