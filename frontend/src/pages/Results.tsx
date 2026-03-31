@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { Bot, Download, Globe2, Share2, Sparkles } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -70,72 +69,24 @@ export const Results = () => {
   }, [id]);
 
   const downloadPdf = async () => {
-    if (!score) {
-      return;
+    if (!score) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(
+        `${(import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')}/score/${score.id}/pdf`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `money-health-score-${score.id.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setToast({ open: true, message: 'Could not generate PDF. Please try again.', variant: 'error' });
     }
-
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const margin = 16;
-    let y = margin;
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.text('Money Health Score Report', margin, y);
-
-    y += 10;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text(`Overall Score: ${score.totalScore.toFixed(1)} / 100`, margin, y);
-    y += 7;
-    doc.text(`Generated on: ${new Date(score.createdAt).toLocaleDateString('en-IN')}`, margin, y);
-    y += 9;
-
-    const summaryLines = doc.splitTextToSize(score.aiInsights, 175);
-    doc.text(summaryLines, margin, y);
-    y += summaryLines.length * 5 + 5;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dimension Scores', margin, y);
-    y += 8;
-    doc.setFont('helvetica', 'normal');
-
-    dimensionSummary(score).forEach(([label, value]) => {
-      doc.text(`${label}: ${value.toFixed(1)}`, margin, y);
-      y += 7;
-    });
-
-    if (score.geminiInsight) {
-      y += 4;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Motivational Insight', margin, y);
-      y += 7;
-      doc.setFont('helvetica', 'normal');
-      const geminiLines = doc.splitTextToSize(score.geminiInsight, 175);
-      doc.text(geminiLines, margin, y);
-    }
-
-    doc.addPage();
-    y = margin;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text('12-Month Action Plan', margin, y);
-    y += 10;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-
-    score.actionPlan.forEach((item) => {
-      const amount = item.amount ? ` | ${formatCurrency(item.amount)}` : '';
-      const line = `${item.month}. ${item.title} (${item.dimension})${amount}`;
-      doc.setFont('helvetica', 'bold');
-      doc.text(line, margin, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      const body = doc.splitTextToSize(`Goal: ${item.goal} Action: ${item.action}`, 175);
-      doc.text(body, margin, y);
-      y += body.length * 4 + 3;
-    });
-
-    doc.save('money-health-score-report.pdf');
   };
 
   const downloadShareImage = async () => {
@@ -198,7 +149,7 @@ export const Results = () => {
 
           <div className="flex flex-col items-center text-center">
             <ScoreGauge score={score.totalScore} size={260} />
-            <p className="mt-6 max-w-2xl text-2xl italic leading-9 text-white/95">“{score.aiInsights}”</p>
+            <p className="mt-6 max-w-2xl text-2xl italic leading-9 text-white/95">ï¿½{score.aiInsights}ï¿½</p>
             <p className="mt-4 text-base text-muted">{getBenchmarkText(score.totalScore)}</p>
           </div>
         </div>

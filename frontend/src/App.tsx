@@ -5,6 +5,7 @@ import { Loader } from './components/ui/Loader';
 import { rehydrateAuth, useQuizStore } from './store/quizStore';
 import { AIAssistant } from './pages/AIAssistant';
 import { Dashboard } from './pages/Dashboard';
+import { FireCalculator } from './pages/FireCalculator';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Quiz } from './pages/Quiz';
@@ -77,6 +78,14 @@ const App = () => {
           element={
             <AuthGuard authReady={authReady}>
               <AIAssistant />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/fire"
+          element={
+            <AuthGuard authReady={authReady}>
+              <FireCalculator />
             </AuthGuard>
           }
         />

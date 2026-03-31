@@ -1,4 +1,4 @@
-import { Bot, WalletCards } from 'lucide-react';
+import { Bot, Flame, WalletCards } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../../hooks/useAuth';
@@ -39,6 +39,12 @@ export const Navbar = () => {
                 <Button variant="ghost" className="px-4 py-2.5">
                   <Bot className="h-4 w-4" />
                   AI Copilot
+                </Button>
+              </Link>
+              <Link to="/fire">
+                <Button variant="ghost" className="px-4 py-2.5">
+                  <Flame className="h-4 w-4" />
+                  FIRE
                 </Button>
               </Link>
               <Link to="/quiz">
