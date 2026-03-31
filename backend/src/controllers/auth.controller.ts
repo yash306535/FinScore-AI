@@ -46,6 +46,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     });
 
     const token = signToken(user.id, user.email);
+    console.log('[register] token generated:', token ? `${token.slice(0, 20)}...` : 'UNDEFINED');
 
     res.cookie('token', token, getAuthCookieOptions());
     res.status(201).json({ user, token });
@@ -80,6 +81,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     const token = signToken(user.id, user.email);
+    console.log('[login] token generated:', token ? `${token.slice(0, 20)}...` : 'UNDEFINED');
 
     res.cookie('token', token, getAuthCookieOptions());
     res.json({

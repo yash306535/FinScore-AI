@@ -33,6 +33,7 @@ export const useAuth = () => {
           'X-Skip-Auth-Redirect': 'true'
         }
       });
+      console.log('[register] token received:', data.token ? `${data.token.slice(0, 20)}...` : 'UNDEFINED');
       localStorage.setItem('auth_token', data.token);
       setUser(data.user);
       return data.user;
@@ -51,6 +52,7 @@ export const useAuth = () => {
           'X-Skip-Auth-Redirect': 'true'
         }
       });
+      console.log('[login] token received:', data.token ? `${data.token.slice(0, 20)}...` : 'UNDEFINED');
       localStorage.setItem('auth_token', data.token);
       setUser(data.user);
       return data.user;
