@@ -1,56 +1,82 @@
 # Money Health Score
 
-Money Health Score is a full-stack AI-powered financial wellness application for Indian professionals that turns a fast 20-question assessment into a weighted money health score, detailed dimension insights, a motivational coaching note, a 12-month action plan, and an interactive follow-up chat experience.
+Money Health Score is a full-stack financial wellness app for Indian professionals. It turns a short assessment into a weighted score, dimension-level insights, a practical action plan, and an AI follow-up experience that helps users decide what to do next.
 
-## Features
+## What It Does
 
-- Secure authentication with JWT cookies, bcrypt password hashing, and protected routes
-- 20-question guided quiz across emergency fund, insurance, investments, debt, tax planning, and retirement
-- Gemini-powered financial scoring using weighted dimension logic tailored to Indian best practices
-- Gemini-generated motivational coaching insight based on score and top weakness
-- Gemini-generated 12-month action plan with realistic rupee targets and Indian financial products
-- Results dashboard with animated SVG score gauge, dimension cards, benchmark messaging, and a saved history timeline
-- Action plan tracking with localStorage persistence per score report
-- AI chat panel that answers questions using the user's saved score report as context
-- PDF export for full report and PNG share download for the score hero section
-- Demo-fill flow for fast walkthroughs and judging
-- Docker Compose setup for running both frontend and backend together
+- Guides users through a 20-question quiz across emergency fund, insurance, investments, debt, tax planning, and retirement
+- Calculates a weighted Money Health Score with dimension-specific insights
+- Generates a concise coaching summary and a 12-month action plan
+- Lets users continue the conversation with an AI assistant using their saved score context
+- Includes PDF export, shareable score visuals, demo data, and a clean dashboard experience
 
-## Prerequisites
+## Why It Stands Out
 
-- Node.js 20
-- npm
-- Supabase Postgres database
-- Gemini API key
+- Built around Indian financial best practices and rupee-based guidance
+- Uses Anthropic-backed AI for scoring, coaching, planning, and chat
+- Keeps the experience lightweight with JWT auth, Supabase Postgres, and a simple Vite frontend
+- Supports both local development and Docker Compose startup
 
-## Setup
+## Tech Stack
 
-1. Clone the repository and open the `money-health-score` folder.
+- Frontend: React, Vite, TypeScript, Tailwind CSS
+- Backend: Node.js, Express, TypeScript
+- Database: Supabase Postgres with Prisma
+- AI: Anthropic, plus Serper for live web search support
+
+## Quick Start
+
+1. Clone the repository and open the project folder.
 2. Copy `backend/.env.example` to `backend/.env`.
-3. Add your Supabase `DATABASE_URL` and `DIRECT_URL` plus your Gemini API key inside `backend/.env`.
-4. Run `npm install` inside `backend`.
-5. Run `npm install` inside `frontend`.
-6. In `backend`, run `npm run generate`.
-7. In `backend`, run `npm run db:push` to create the schema in Supabase.
-8. In `backend`, run `npm run dev`.
-9. In `frontend`, run `npm run dev`.
+3. Add your Supabase database URLs, JWT secret, `ANTHROPIC_API_KEY`, and `SERPER_API_KEY`.
+4. Run `npm install` in `backend` and `frontend`.
+5. In `backend`, run `npm run generate` and `npm run db:push`.
+6. Start the backend with `npm run dev`.
+7. Start the frontend with `npm run dev`.
 
 The frontend runs on `http://localhost:5173` and the backend API runs on `http://localhost:3001`.
 
-For a more detailed first-run walkthrough, see `STARTUP_GUIDE.md`.
+## Environment Variables
 
-## Supabase Connection Strings
+Backend `backend/.env`:
 
-Use these values from your Supabase project:
+```env
+DATABASE_URL="your-supabase-session-pooler-url"
+DIRECT_URL="your-supabase-session-pooler-url"
+JWT_SECRET="your-random-secret"
+JWT_EXPIRES_IN="7d"
+PORT=3001
+FRONTEND_URL="http://localhost:5173"
+ANTHROPIC_API_KEY="your-anthropic-key"
+ANTHROPIC_MODEL="claude-haiku-4-5"
+SERPER_API_KEY="your-serper-key"
+NODE_ENV="development"
+```
 
-- `DATABASE_URL`: use your Supabase Session pooler connection string on port `5432` for this backend
-- `DIRECT_URL`: if the direct `db.<project-ref>.supabase.co` host is unreachable, use the same Session pooler URL here too
+Notes:
 
-Both should point to the same Supabase Postgres database, and any special characters in the password must be URL-encoded.
+- Use the Supabase Session pooler URL on port `5432` for both `DATABASE_URL` and `DIRECT_URL` if needed.
+- URL-encode special characters in database passwords.
+- Keep the real `backend/.env` out of version control.
 
-## Getting API Keys
+## Common Scripts
 
-- Gemini: create an API key from `https://aistudio.google.com`
+Backend:
+
+```bash
+npm run dev
+npm run build
+npm run generate
+npm run db:push
+```
+
+Frontend:
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```
 
 ## Docker
 
@@ -60,14 +86,16 @@ Run the full stack with:
 docker-compose up --build
 ```
 
-For Docker, create `backend/.env` first so the backend service can read your secrets.
+Make sure `backend/.env` is filled in before starting Docker.
 
-## Demo Walkthrough For Judges
+## Demo Flow
 
-1. Open `http://localhost:5173`.
-2. Click `See Sample Score`, create a quick account, and use the auto-filled demo profile.
-3. Click `Submit for Analysis` and watch the AI thinking animation.
-4. View the score reveal, headline, benchmark message, and the 6-dimension breakdown.
-5. Click the chat bubble and ask a question like `What should I do first?`.
-6. Scroll through the 12-month action plan and check off month 1.
-7. Click `Share` to download the score image.
+1. Open the app in the browser.
+2. Create a quick account or use the demo flow.
+3. Submit the quiz and review the score reveal.
+4. Open the AI chat and ask what to do first.
+5. Review the 12-month action plan and export the report if needed.
+
+## More Detail
+
+For a full first-run walkthrough, see [STARTUP_GUIDE.md](STARTUP_GUIDE.md).

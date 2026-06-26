@@ -41,7 +41,7 @@ JWT_SECRET="your-random-secret"
 JWT_EXPIRES_IN="7d"
 PORT=3001
 FRONTEND_URL="http://localhost:5173"
-GEMINI_API_KEY="your-gemini-key"
+ANTHROPIC_API_KEY="your-anthropic-key"
 SERPER_API_KEY="your-serper-key"
 NODE_ENV="development"
 ```
@@ -137,7 +137,7 @@ Expected frontend URL:
 - You can register a new user
 - Submitting the quiz creates rows in Supabase
 - The new `/assistant` page opens after login
-- Live web mode and Opportunity Radar work when both Gemini and Serper keys are present
+- Live web mode and Opportunity Radar work when both Anthropic and Serper keys are present
 
 ## 10. Optional Docker Startup
 
@@ -162,6 +162,6 @@ Make sure `backend/.env` is already filled in before starting Docker.
 - Frontend cannot reach the API:
   Confirm `frontend/.env` points `VITE_API_BASE_URL` to `/api`, then restart the Vite dev server.
 - Quiz submission fails:
-  Confirm `GEMINI_API_KEY` is present in `backend/.env`.
+  Confirm `ANTHROPIC_API_KEY` is present in `backend/.env`.
 - Live web features fail:
   Confirm `SERPER_API_KEY` is present in `backend/.env` and restart the backend after adding it.

@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 
 import {
@@ -13,7 +12,17 @@ import {
 import { formatSourcesForPrompt } from './serper.service';
 import { normalizeScore } from './scoring.service';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const ANTHROPIC_MODEL = (() => {
+  const configuredModel = process.env.ANTHROPIC_MODEL?.trim();
+
+  if (!configuredModel || configuredModel === 'claude-3-5-sonnet-latest') {
+    return 'claude-haiku-4-5';
+  }
+
+  return configuredModel;
+})();
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_API_VERSION = '2023-06-01';
 
 const SCORING_SYSTEM_PROMPT = `You are a Certified Financial Planner with 15 years of experience specializing in personal finance for working Indians aged 22 to 45. Analyze the provided quiz answers carefully and score each of the 6 financial dimensions from 0 to 100 using Indian financial best practices and SEBI guidelines. Be strict and realistic with scoring. Apply these exact weights to calculate totalScore: Emergency Fund 20 percent, Insurance 15 percent, Investments 25 percent, Debt 20 percent, Tax Planning 10 percent, Retirement 10 percent. Return ONLY a valid JSON object with no extra text before or after. The JSON must have exactly these fields: totalScore as a number rounded to 1 decimal, dimensions as an object containing emergency, insurance, investments, debt, tax, and retirement where each has score as number, label as exactly one of Poor or Fair or Good or Excellent, and insight as exactly 2 specific sentences referencing the user's actual answers, topStrength as the key of the highest scoring dimension, topWeakness as the key of the lowest scoring dimension, headline as one compelling sentence that summarizes their financial health without being generic.`;
 
@@ -53,25 +62,76 @@ const opportunityRadarSchema = z.object({
   watchouts: z.array(coerceToString).min(1).max(5)
 });
 
-const getGeminiClient = (): GoogleGenerativeAI => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw createAppError('GEMINI_API_KEY is not configured', 500);
-  }
-
-  return new GoogleGenerativeAI(apiKey);
+type AnthropicContentBlock = {
+  type?: string;
+  text?: string;
 };
 
-const getGeminiModel = (systemInstruction: string, responseMimeType?: string) =>
-  getGeminiClient().getGenerativeModel({
-    model: GEMINI_MODEL,
-    systemInstruction,
-    generationConfig: {
-      temperature: responseMimeType === 'application/json' ? 0.2 : 0.7,
-      ...(responseMimeType ? { responseMimeType } : {})
-    }
+type AnthropicMessageResponse = {
+  content?: AnthropicContentBlock[];
+  error?: {
+    message?: string;
+    type?: string;
+  };
+};
+
+const getAnthropicApiKey = (): string => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    throw createAppError('ANTHROPIC_API_KEY is not configured', 500);
+  }
+
+  return apiKey;
+};
+
+const callAnthropic = async ({
+  systemInstruction,
+  prompt,
+  temperature,
+  maxTokens
+}: {
+  systemInstruction: string;
+  prompt: string;
+  temperature: number;
+  maxTokens: number;
+}): Promise<string> => {
+  const response = await fetch(ANTHROPIC_API_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': getAnthropicApiKey(),
+      'anthropic-version': ANTHROPIC_API_VERSION
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      system: systemInstruction,
+      messages: [{ role: 'user', content: prompt }],
+      temperature,
+      max_tokens: maxTokens
+    })
   });
+
+  const payload = (await response.json().catch(() => null)) as AnthropicMessageResponse | null;
+
+  if (!response.ok) {
+    const errorMessage = payload?.error?.message || response.statusText || 'Unknown Anthropic error';
+
+    throw createAppError(`Anthropic request failed: ${errorMessage}`, 502);
+  }
+
+  const text = (payload?.content || [])
+    .map((block) => (typeof block.text === 'string' ? block.text : ''))
+    .join('\n')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!text) {
+    throw createAppError('Anthropic returned an empty response', 502);
+  }
+
+  return text;
+};
 
 const normalizeModelText = (text: string): string =>
   text
@@ -96,17 +156,18 @@ const formatConversationHistory = (history: AssistantMessageTurn[]): string => {
     .join('\n');
 };
 
-const generateTextWithGemini = async (
+const generateTextWithAnthropic = async (
   systemInstruction: string,
   prompt: string,
-  emptyResponseMessage: string
+  emptyResponseMessage: string,
+  maxTokens = 1024
 ): Promise<string> => {
-  const model = getGeminiModel(systemInstruction);
-  const result = await model.generateContent(prompt);
-  const text = result.response
-    .text()
-    .replace(/\s+/g, ' ')
-    .trim();
+  const text = await callAnthropic({
+    systemInstruction,
+    prompt,
+    temperature: 0.7,
+    maxTokens
+  });
 
   if (!text) {
     throw createAppError(emptyResponseMessage, 502);
@@ -115,15 +176,21 @@ const generateTextWithGemini = async (
   return text;
 };
 
-const generateJsonWithGemini = async (
+const generateJsonWithAnthropic = async (
   systemInstruction: string,
   prompt: string,
   parseFailureMessage: string,
-  emptyResponseMessage: string
+  emptyResponseMessage: string,
+  maxTokens = 4096
 ): Promise<unknown> => {
-  const model = getGeminiModel(systemInstruction, 'application/json');
-  const result = await model.generateContent(prompt);
-  const rawText = normalizeModelText(result.response.text());
+  const rawText = normalizeModelText(
+    await callAnthropic({
+      systemInstruction,
+      prompt,
+      temperature: 0.2,
+      maxTokens
+    })
+  );
 
   if (!rawText) {
     throw createAppError(emptyResponseMessage, 502);
@@ -137,11 +204,11 @@ const generateJsonWithGemini = async (
 };
 
 export const scoreQuiz = async (quizAnswers: Record<string, unknown>) => {
-  const parsed = await generateJsonWithGemini(
+  const parsed = await generateJsonWithAnthropic(
     SCORING_SYSTEM_PROMPT,
     `Score this quiz answer payload:\n${JSON.stringify(quizAnswers, null, 2)}`,
-    'Failed to parse Gemini scoring response.',
-    'Gemini returned an empty scoring response'
+    'Failed to parse Anthropic scoring response.',
+    'Anthropic returned an empty scoring response'
   );
 
   return normalizeScore(parsed);
@@ -151,12 +218,12 @@ export const getMotivationalInsight = async (
   score: number,
   weakness: string
 ): Promise<string> =>
-  generateTextWithGemini(
+  generateTextWithAnthropic(
     'You are a behavioral finance coach for young Indian professionals. Keep responses warm, direct, non-judgmental, and practical.',
     `The user just received their Money Health Score of ${score} out of 100. Their biggest financial weakness is in the ${toDimensionTitle(
       weakness as DimensionKey
     )} dimension. Write exactly 3 sentences as a single plain paragraph with no formatting. First sentence: acknowledge one specific thing they are doing well based on their score. Second sentence: give the single highest-impact action they can take in the next 7 days, name a specific rupee amount or product. Third sentence: paint a picture of where they will be in 12 months if they take that action today. Do not use bullet points, headers, bold, or any markdown formatting.`,
-    'Gemini returned an empty motivational insight'
+    'Anthropic returned an empty motivational insight'
   );
 
 export const generatePlan = async (
@@ -164,18 +231,19 @@ export const generatePlan = async (
   weakness: string,
   income: number
 ): Promise<ActionPlanItem[]> => {
-  const parsed = await generateJsonWithGemini(
+  const parsed = await generateJsonWithAnthropic(
     'You create realistic, step-by-step personal finance action plans for Indian professionals. Always return exactly the requested JSON and keep rupee amounts realistic for the stated income.',
     `Create a 12-month personalized financial action plan for an Indian professional. Their Money Health Score is ${score} out of 100. Their weakest financial dimension is ${weakness}. Their monthly income is ${income} rupees. Return ONLY a valid JSON array of exactly 12 objects with no extra text. Each object must have these fields: month as integer from 1 to 12, title as action title under 7 words, goal as specific measurable goal for that month, action as one concrete step to take this month, amount as integer rupee amount or null if not applicable, dimension as the financial dimension this addresses using one of these exact values: emergency, insurance, investments, debt, tax, retirement. Rules: Month 1 must be a quick win completable in one week. Months 2 and 3 build on month 1. From month 4 increase complexity gradually. Distribute actions across all 6 dimensions over the 12 months. Use specific Indian products: mention SIP for mutual funds, term insurance from LIC or HDFC Life, PPF contributions, NPS Tier 1, ELSS funds for tax saving, Floater health insurance plans.`,
-    'Failed to parse Gemini action plan response.',
-    'Gemini returned an empty action plan response'
+    'Failed to parse Anthropic action plan response.',
+    'Anthropic returned an empty action plan response',
+    4096
   );
 
   const validation = actionPlanSchema.safeParse(parsed);
 
   if (!validation.success) {
     throw createAppError(
-      `Gemini action plan response was invalid: ${validation.error.issues
+      `Anthropic action plan response was invalid: ${validation.error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join(', ')}`,
       502
@@ -189,14 +257,14 @@ export const chatWithScoreContext = async (
   scoreContext: unknown,
   message: string
 ): Promise<string> =>
-  generateTextWithGemini(
+  generateTextWithAnthropic(
     `You are a personal financial advisor reviewing a client's Money Health Score report. Answer conversationally, cite the user's actual scores and context, use Indian rupees for amounts, keep replies under 4 sentences unless asked for more detail, and start with the biggest improvement opportunity when in doubt.`,
     `Here is the user's complete financial profile and saved score context:\n${JSON.stringify(
       scoreContext,
       null,
       2
     )}\n\nUser question: ${message}`,
-    'Gemini returned an empty chat response'
+    'Anthropic returned an empty chat response'
   );
 
 export const chatWithFinancialCopilot = async ({
@@ -212,7 +280,7 @@ export const chatWithFinancialCopilot = async ({
   sources?: SearchSource[];
   searchQuery?: string | null;
 }): Promise<string> =>
-  generateTextWithGemini(
+  generateTextWithAnthropic(
     `You are Money Health Copilot, an AI financial coach for Indian professionals. Keep answers warm, sharp, and practical. Use the user's Money Health Score context when available. When live web sources are provided, ground time-sensitive claims only in those sources, mention exact dates when helpful, and cite the source number in square brackets like [1] or [2]. Never invent a citation. Keep answers under 6 sentences unless the user asks for more.`,
     `Today's date: ${new Date().toISOString().slice(0, 10)}
 
@@ -230,7 +298,7 @@ ${formatSourcesForPrompt(sources)}
 
 User message:
 ${message}`,
-    'Gemini returned an empty assistant response'
+  'Anthropic returned an empty assistant response'
   );
 
 export const generateOpportunityRadar = async ({
@@ -242,7 +310,7 @@ export const generateOpportunityRadar = async ({
   sources: SearchSource[];
   searchQuery: string;
 }): Promise<OpportunityRadarPayload> => {
-  const parsed = await generateJsonWithGemini(
+  const parsed = await generateJsonWithAnthropic(
     `You create punchy, decision-ready opportunity briefs for a personal finance app used by Indian professionals. Always return exactly the requested JSON and keep the advice concrete, timely, and realistic.`,
     `Today's date: ${new Date().toISOString().slice(0, 10)}
 
@@ -266,8 +334,9 @@ Rules:
 - Keep it India-specific.
 - If the sources are recent news or changing market guidance, reflect that with concrete wording instead of vague statements.
 - Do not mention fields outside the JSON schema.`,
-    'Failed to parse Gemini opportunity radar response.',
-    'Gemini returned an empty opportunity radar response'
+  'Failed to parse Anthropic opportunity radar response.',
+  'Anthropic returned an empty opportunity radar response',
+  4096
   );
 
   const validation = opportunityRadarSchema.safeParse(parsed);
